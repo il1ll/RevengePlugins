@@ -1,7 +1,10 @@
-# Vendetta Plugins Template
-This repo contains a template for creating [Vendetta](https://github.com/vendetta-mod/Vendetta) plugins.
+# coder plugins
+This repo contains my own plugins for Revenge.
+
+---
 
 # How to install?
-Paste a plugin URL into the Plugins page of Vendetta, following a basic format of:
-
-https://`YOUR_GITHUB_USERNAME`.github.io/`REPO_NAME`/`PLUGIN_NAME`
+Paste a plugin URL into the Plugins page of Revenge, following a basic format of:
+```
+https://il1ll.github.io/RevengePlugins/<PLUGIN_NAME>
+```

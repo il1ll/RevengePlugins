@@ -5,21 +5,20 @@ import { showToast } from "@vendetta/ui/toasts";
 const ChannelStore = findByProps("getChannel");
 const getToken = findByProps("getToken").getToken;
 
-export const loadCommands = () => {
+const loadCommands = () => {
   registerCommand({
-    name: "leave",
+    name: "leave silent",
     description: "Leave the current Group DM silently",
     options: [],
-    execute: (_, ctx) => {
+    predicate: (ctx) => {
       const channelId = ctx?.channel?.id;
       const channel = ChannelStore.getChannel(channelId);
-
-      if (!channel || channel.type !== 3) {
-        showToast("This command works only in Group DMs.");
-        return;
-      }
-
+      return !!channel && channel.type === 3;
+    },
+    execute: (_, ctx) => {
+      const channelId = ctx.channel.id;
       const token = getToken();
+
       if (!token) {
         showToast("Failed to get token.");
         return;
@@ -35,16 +34,18 @@ export const loadCommands = () => {
       })
       .then(res => {
         if (res.ok) showToast("Left Group DM successfully.");
-        else showToast(`Failed to leave Group DM: ${res.status}`);
+        else showToast(`Failed: ${res.status}`);
       })
-      .catch(e => showToast(`Error: ${e.message}`));
-    },
+      .catch(e => showToast(e.message));
+    }
   });
 };
 
-export const unloadCommands = () => unregisterAllCommands();
-
 export default {
-  onLoad() { loadCommands(); },
-  onunload() { unloadCommands(); }
+  onLoad() {
+    loadCommands();
+  },
+  onUnload() {
+    unregisterAllCommands();
+  }
 };

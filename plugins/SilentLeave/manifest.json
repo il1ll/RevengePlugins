@@ -1,6 +1,6 @@
 {
     "name": "SilentLeave",
-    "description": "Leave the current Group DM silently with /leave command",
+    "description": "Leave the current Group DM silently with /leave silent command",
     "authors": [
         {
             "name": "coder.gg",

@@ -1,1 +1,1 @@
-{"name":"SilentLeave","description":"Leave the current Group DM silently with /leave command","authors":[{"name":"coder.gg","id":"1099039269391171765"}],"main":"index.js","vendetta":{"icon":"ic_unmute_channel_24px"},"hash":"bfbb3587ef343a33053f299a2902da760ea80b43142642a7884d54912ab25087"}
+{"name":"SilentLeave","description":"Leave the current Group DM silently with /leave command","authors":[{"name":"coder.gg","id":"1099039269391171765"}],"main":"index.js","vendetta":{"icon":"ic_unmute_channel_24px"},"hash":"bbfaafa12903d31fe035ffed92bb15e1e2b267ac125ebcfce8eee2ca6e741adb"}

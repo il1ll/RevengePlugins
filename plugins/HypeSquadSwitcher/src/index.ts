@@ -3,29 +3,22 @@ import { findByProps } from "@vendetta/metro";
 import { showToast } from "@vendetta/ui/toasts";
 import Settings from "./settings";
 
-const getToken = findByProps("getToken").getToken;
+const APIUtils = findByProps("getAPIBaseURL", "get", "post", "del");
 
-function request(method: string, body?: any) {
-  const token = getToken();
-  if (!token) {
-    showToast("Failed to get token");
-    return;
+function request(method: "POST" | "DELETE", body?: any) {
+  if (method === "POST") {
+    return APIUtils.post({
+      url: "/hypesquad/online",
+      body
+    });
   }
 
-  fetch("https://discord.com/api/v9/hypesquad/online", {
-    method,
-    headers: {
-      Authorization: token,
-      "Content-Type": "application/json",
-      "User-Agent": "Discord-Android/305012;RNA"
-    },
-    body: body ? JSON.stringify(body) : undefined
-  }).then(r => {
-    if (!r.ok) showToast(`Request failed: ${r.status}`);
-  }).catch(e => showToast(`Error: ${e.message}`));
+  return APIUtils.del({
+    url: "/hypesquad/online"
+  });
 }
 
-function applyHouse(args: any) {
+async function applyHouse(args: any) {
   const raw =
     args?.type ??
     args?.[0]?.value ??
@@ -34,31 +27,30 @@ function applyHouse(args: any) {
 
   const value = Number(raw);
 
-  if (!Number.isInteger(value)) {
+  if (!Number.isInteger(value) || ![0, 1, 2, 3].includes(value)) {
     showToast("Use 0, 1, 2, 3");
     return;
   }
 
-  if (value === 0) {
-    request("DELETE");
-    showToast("HypeSquad removed");
-    return;
+  try {
+    if (value === 0) {
+      await request("DELETE");
+      showToast("HypeSquad removed");
+      return;
+    }
+
+    await request("POST", { house_id: value });
+
+    const names: Record<number, string> = {
+      1: "Bravery",
+      2: "Brilliance",
+      3: "Balance"
+    };
+
+    showToast(`HypeSquad set to ${names[value]}`);
+  } catch {
+    showToast("Request failed");
   }
-
-  if (![1, 2, 3].includes(value)) {
-    showToast("Use 0, 1, 2, 3");
-    return;
-  }
-
-  request("POST", { house_id: value });
-
-  const names: Record<number, string> = {
-    1: "Bravery",
-    2: "Brilliance",
-    3: "Balance"
-  };
-
-  showToast(`HypeSquad set to ${names[value]}`);
 }
 
 export const loadCommands = () => {

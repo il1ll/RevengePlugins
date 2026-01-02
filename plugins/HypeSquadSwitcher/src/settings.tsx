@@ -1,16 +1,47 @@
-import { React, ReactNative as RN } from "@vendetta/metro/common";
+import { React, ReactNative as RN, NavigationNative } from "@vendetta/metro/common";
 import { storage } from "@vendetta/plugin";
 import { findByProps } from "@vendetta/metro";
 import { showToast } from "@vendetta/ui/toasts";
+import { useProxy } from "@vendetta/storage";
+import { getAssetIDByName } from "@vendetta/ui/assets";
+
+const { ScrollView } = findByProps("ScrollView");
+const { TableRowGroup, TableRow, Stack } = findByProps(
+  "TableSwitchRow",
+  "TableCheckboxRow",
+  "TableRowGroup",
+  "Stack",
+  "TableRow"
+);
 
 const getToken = findByProps("getToken").getToken;
 
-function applyValue(value: number) {
+const HOUSES = [
+  {
+    id: 1,
+    name: "Bravery",
+  },
+  {
+    id: 2,
+    name: "Brilliance",
+  },
+  {
+    id: 3,
+    name: "Balance",
+  },
+  {
+    id: 0,
+    name: "Remove Badge",
+    description: "Remove your HypeSquad badge"
+  },
+];
+
+function applyHypeSquad(value: number) {
   const token = getToken();
-  if (!token) return showToast("Failed to get token");
+  if (!token) return showToast("Failed to get token", getAssetIDByName("Small"));
 
   if (![0, 1, 2, 3].includes(value)) {
-    showToast("Only 0-3 allowed");
+    showToast("Only 0-3 allowed", getAssetIDByName("Small"));
     return;
   }
 
@@ -19,11 +50,17 @@ function applyValue(value: number) {
       method: "DELETE",
       headers: { Authorization: token },
     })
-      .then(res => showToast(res.ok ? "HypeSquad removed" : `Failed: ${res.status}`))
-      .catch(e => showToast(`Error: ${e.message}`));
+      .then(res =>
+        showToast(
+          res.ok ? "HypeSquad badge removed" : `Failed: ${res.status}`,
+          getAssetIDByName(res.ok ? "Check" : "Small")
+        )
+      )
+      .catch(e => showToast(`Error: ${e.message}`, getAssetIDByName("Small")));
     return;
   }
 
+  const house = HOUSES.find(h => h.id === value);
   fetch("https://discord.com/api/v9/hypesquad/online", {
     method: "POST",
     headers: {
@@ -32,83 +69,71 @@ function applyValue(value: number) {
     },
     body: JSON.stringify({ house_id: value }),
   })
-    .then(res => showToast(res.ok ? `HypeSquad set to ${value}` : `Failed: ${res.status}`))
-    .catch(e => showToast(`Error: ${e.message}`));
+    .then(res =>
+      showToast(
+        res.ok ? `Joined House ${house?.name}!` : `Failed: ${res.status}`,
+        getAssetIDByName(res.ok ? "Check" : "Small")
+      )
+    )
+    .catch(e => showToast(`Error: ${e.message}`, getAssetIDByName("Small")));
+}
+
+function HouseSelectorPage() {
+  useProxy(storage);
+  const navigation = NavigationNative.useNavigation();
+
+  return (
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 10 }}>
+      <Stack spacing={8}>
+        <TableRowGroup title="Choose Your House">
+          {HOUSES.map(house => (
+            <TableRow
+              key={house.id}
+              label={house.name}
+              subLabel={house.description}
+              onPress={() => {
+                storage.hsValue = house.id;
+                applyHypeSquad(house.id);
+                navigation.goBack();
+              }}
+            />
+          ))}
+        </TableRowGroup>
+      </Stack>
+    </ScrollView>
+  );
 }
 
 export default function Settings() {
-  const [val, setVal] = React.useState(storage.hsValue ?? "");
+  useProxy(storage);
+  const navigation = NavigationNative.useNavigation();
+
+  const currentHouse = HOUSES.find(h => h.id === storage.hsValue);
 
   return (
-    <RN.ScrollView style={{ flex: 1, padding: 16, backgroundColor: "#2f3136" }}>
-      <RN.View style={{ marginBottom: 12 }}>
-        <RN.TextInput
-          placeholder="Enter 0-3"
-          placeholderTextColor="#ccc"
-          value={val}
-          onChangeText={setVal}
-          keyboardType="numeric"
-          style={{
-            borderWidth: 1,
-            borderColor: "#7289da",
-            padding: 10,
-            borderRadius: 8,
-            color: "#fff",
-            fontSize: 16,
-            backgroundColor: "#202225",
-          }}
-        />
-      </RN.View>
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 10 }}>
+      <Stack spacing={8}>
+        <TableRowGroup title="HypeSquad">
+          <TableRow
+            label="Current House"
+            subLabel={currentHouse ? currentHouse.description : "No house selected"}
+            trailing={<TableRow.Arrow />}
+            onPress={() =>
+              navigation.push("VendettaCustomPage", {
+                title: "Select House",
+                render: HouseSelectorPage,
+              })
+            }
+          />
+        </TableRowGroup>
 
-      <RN.TouchableOpacity
-        onPress={() => {
-          if (val === "") return showToast("You must enter a number 0-3");
-          storage.hsValue = val;
-          applyValue(Number(val));
-        }}
-        style={{
-          backgroundColor: "#7289da",
-          paddingVertical: 12,
-          borderRadius: 8,
-          alignItems: "center",
-          marginBottom: 16,
-        }}
-      >
-        <RN.Text style={{ color: "#fff", fontWeight: "bold", fontSize: 16 }}>
-          Apply
-        </RN.Text>
-      </RN.TouchableOpacity>
-
-      <RN.View>
-        <RN.Text style={{ color: "#fff", fontSize: 16, marginBottom: 6 }}>
-          💡 <RN.Text style={{ color: "#faa81a" }}>Instructions:</RN.Text>
-        </RN.Text>
-
-        <RN.Text style={{ color: "#fff", marginBottom: 4 }}>
-          - Use the <RN.Text style={{ color: "#00bfff" }}>/hypesquad</RN.Text> command in Discord.
-        </RN.Text>
-
-        <RN.Text style={{ color: "#fff", marginBottom: 4 }}>
-          - Example: <RN.Text style={{ color: "#ff6b81" }}>/hypesquad type:1</RN.Text>
-        </RN.Text>
-
-        <RN.Text style={{ color: "#fff", marginBottom: 6 }}>
-          - The <RN.Text style={{ color: "#00ff7f" }}>type</RN.Text> value can be from <RN.Text style={{ color: "#00ff7f" }}>0</RN.Text> to <RN.Text style={{ color: "#00ff7f" }}>3</RN.Text>:
-        </RN.Text>
-
-        <RN.Text style={{ color: "#fff", marginBottom: 2 }}>
-          <RN.Text style={{ color: "#ff6b81" }}>0</RN.Text> = Remove HypeSquad Badge
-        </RN.Text>
-        <RN.Text style={{ color: "#fff", marginBottom: 2 }}>
-          <RN.Text style={{ color: "#ff6b81" }}>1</RN.Text> = Bravery House
-        </RN.Text>
-        <RN.Text style={{ color: "#fff", marginBottom: 2 }}>
-          <RN.Text style={{ color: "#ff6b81" }}>2</RN.Text> = Brilliance House
-        </RN.Text>
-        <RN.Text style={{ color: "#fff", marginBottom: 2 }}>
-          <RN.Text style={{ color: "#ff6b81" }}>3</RN.Text> = Balance House
-        </RN.Text>
-      </RN.View>
-    </RN.ScrollView>
+        <TableRowGroup title="Information">
+          <TableRow
+            label="How to Change"
+            subLabel="Tap 'Current House' above to select a different house or remove your badge"
+          />
+        </TableRowGroup>
+      </Stack>
+    </ScrollView>
   );
 }

@@ -22,6 +22,13 @@ if (storage.targetChannelId === undefined) storage.targetChannelId = "";
 if (storage.trackMode === undefined) storage.trackMode = "everyone";
 if (storage.customIds === undefined) storage.customIds = "";
 if (storage.ignoreBots === undefined) storage.ignoreBots = true;
+if (storage.trackEmbeds === undefined) storage.trackEmbeds = false;
+if (storage.trackChannelsEnabled === undefined) storage.trackChannelsEnabled = false;
+if (storage.trackedChannelIds === undefined) storage.trackedChannelIds = "";
+if (storage.ignoreServersEnabled === undefined) storage.ignoreServersEnabled = false;
+if (storage.ignoredServerIds === undefined) storage.ignoredServerIds = "";
+if (storage.ignoreChannelsEnabled === undefined) storage.ignoreChannelsEnabled = false;
+if (storage.ignoredChannelIds === undefined) storage.ignoredChannelIds = "";
 
 let unsubMessage: (() => void) | null = null;
 
@@ -29,7 +36,24 @@ export default {
   onLoad() {
     const onMessage = (p: any) => {
       const m = p?.message;
-      if (!m || !m.content || !storage.keywords || storage.keywords.length === 0) return;
+      if (!m || !storage.keywords || storage.keywords.length === 0) return;
+
+      let fullContent = m.content || "";
+
+      if (storage.trackEmbeds && m.embeds && Array.isArray(m.embeds)) {
+        for (const embed of m.embeds) {
+          if (embed.title) fullContent += " " + embed.title;
+          if (embed.description) fullContent += " " + embed.description;
+          if (embed.fields && Array.isArray(embed.fields)) {
+            for (const f of embed.fields) {
+              if (f.name) fullContent += " " + f.name;
+              if (f.value) fullContent += " " + f.value;
+            }
+          }
+        }
+      }
+
+      if (!fullContent) return;
 
       const currentUser = UserStore.getCurrentUser();
       if (m.author?.id === currentUser?.id) return;
@@ -49,14 +73,32 @@ export default {
       const c = ChannelStore.getChannel(m.channel_id);
       if (!c) return;
 
-      if (c.guild_id && !storage.trackServers) return;
-      if (c.type === 3 && !storage.trackGroups) return;
-      if ((c.type === 1 || (c.type === 0 && !c.guild_id)) && !storage.trackDMs) return;
+      if (storage.ignoreChannelsEnabled && storage.ignoredChannelIds) {
+        const ignoredChannelsList = storage.ignoredChannelIds.split(",").map((id: string) => id.trim());
+        if (ignoredChannelsList.includes(c.id)) return;
+      }
+
+      let isTrackedChannel = false;
+      if (storage.trackChannelsEnabled && storage.trackedChannelIds) {
+        const trackedChannelsList = storage.trackedChannelIds.split(",").map((id: string) => id.trim());
+        if (trackedChannelsList.includes(c.id)) isTrackedChannel = true;
+      }
+
+      if (!isTrackedChannel) {
+        if (c.guild_id && storage.ignoreServersEnabled && storage.ignoredServerIds) {
+          const ignoredServersList = storage.ignoredServerIds.split(",").map((id: string) => id.trim());
+          if (ignoredServersList.includes(c.guild_id)) return;
+        }
+
+        if (c.guild_id && !storage.trackServers) return;
+        if (c.type === 3 && !storage.trackGroups) return;
+        if ((c.type === 1 || (c.type === 0 && !c.guild_id)) && !storage.trackDMs) return;
+      }
 
       let matchedKeyword = "";
 
       for (let kw of storage.keywords) {
-        let content = m.content;
+        let content = fullContent;
         let testKw = kw;
 
         if (!storage.caseSensitive) {
@@ -71,7 +113,7 @@ export default {
           isMatch = content.includes(testKw);
         } else {
           const regex = new RegExp(`\\b${testKw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, storage.caseSensitive ? '' : 'i');
-          isMatch = regex.test(m.content);
+          isMatch = regex.test(fullContent);
         }
 
         if (isMatch) {
@@ -91,7 +133,7 @@ export default {
         messageContent += `    Username: \`@${authorName}\`\n`;
         messageContent += `    ID: \`${author.id}\`\n`;
         messageContent += `**Keyword:** \`${matchedKeyword}\`\n`;
-        messageContent += `**Message:**\n${m.content}\n`;
+        messageContent += `**Message:**\n${m.content || "[Embed Message]"}\n`;
 
         if (c.guild_id) {
           const g = GuildStore.getGuild(c.guild_id);

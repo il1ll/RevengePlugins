@@ -10,25 +10,31 @@ const UserStore = findByProps("getUser", "getCurrentUser");
 const RelationshipStore = findByProps("getFriendIDs");
 const RestAPI = findByProps("get", "post", "del", "patch");
 
-if (storage.trackServers === undefined) storage.trackServers = true;
-if (storage.trackGroups === undefined) storage.trackGroups = true;
-if (storage.trackDMs === undefined) storage.trackDMs = true;
-if (storage.exactMatch === undefined) storage.exactMatch = false;
-if (storage.caseSensitive === undefined) storage.caseSensitive = false;
-if (storage.inSentence === undefined) storage.inSentence = true;
-if (storage.sendNotificationToChannel === undefined) storage.sendNotificationToChannel = false;
-if (storage.keywords === undefined) storage.keywords = [];
-if (storage.targetChannelId === undefined) storage.targetChannelId = "";
-if (storage.trackMode === undefined) storage.trackMode = "everyone";
-if (storage.customIds === undefined) storage.customIds = "";
-if (storage.ignoreBots === undefined) storage.ignoreBots = true;
-if (storage.trackEmbeds === undefined) storage.trackEmbeds = false;
-if (storage.trackChannelsEnabled === undefined) storage.trackChannelsEnabled = false;
-if (storage.trackedChannelIds === undefined) storage.trackedChannelIds = "";
-if (storage.ignoreServersEnabled === undefined) storage.ignoreServersEnabled = false;
-if (storage.ignoredServerIds === undefined) storage.ignoredServerIds = "";
-if (storage.ignoreChannelsEnabled === undefined) storage.ignoreChannelsEnabled = false;
-if (storage.ignoredChannelIds === undefined) storage.ignoredChannelIds = "";
+const defaults = {
+  trackServers: true,
+  trackGroups: true,
+  trackDMs: true,
+  exactMatch: false,
+  caseSensitive: false,
+  inSentence: true,
+  sendNotificationToChannel: false,
+  keywords: [],
+  targetChannelId: "",
+  trackMode: "everyone",
+  customIds: "",
+  ignoreBots: true,
+  trackEmbeds: false,
+  trackChannelsEnabled: false,
+  trackedChannelIds: "",
+  ignoreServersEnabled: false,
+  ignoredServerIds: "",
+  ignoreChannelsEnabled: false,
+  ignoredChannelIds: ""
+};
+
+for (const [key, value] of Object.entries(defaults)) {
+  if (storage[key] === undefined) storage[key] = value;
+}
 
 let unsubMessage: (() => void) | null = null;
 

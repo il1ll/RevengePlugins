@@ -47,21 +47,25 @@ export default {
                 if (!msg) return orig(...args);
 
                 let content = reqData.content;
-                const attachmentMatch = content.match(/\.filename\s+(\S+)/);
+                const regex = /\.filename\s+(\S+)/g;
+                let matches = [...content.matchAll(regex)];
                 let attachments;
 
-                if (attachmentMatch) {
-                    content = content.replace(/\.filename\s+\S+/, "").trim();
-                    const uploadedFilename = attachmentMatch[1];
-                    const filename = uploadedFilename.split("/").pop();
+                if (matches.length > 0) {
+                    matches = matches.slice(0, 10);
                     
-                    attachments = [
-                        {
-                            id: "0",
+                    attachments = matches.map((match, index) => {
+                        const uploadedFilename = match[1];
+                        const filename = uploadedFilename.split("/").pop() || "image.png";
+                        
+                        return {
+                            id: String(index),
                             filename: filename,
-                            uploaded_filename: uploadedFilename,
-                        },
-                    ];
+                            uploaded_filename: uploadedFilename
+                        };
+                    });
+                    
+                    content = content.replace(/\.filename\s+(\S+)/g, "").trim();
                 }
 
                 const body: any = {
@@ -177,8 +181,8 @@ export default {
     },
 
     onUnload() {
-        unpatchEditMessage?.();
-        unpatchActionSheet?.();
+        if (unpatchEditMessage) unpatchEditMessage();
+        if (unpatchActionSheet) unpatchActionSheet();
         unpatchEditMessage = null;
         unpatchActionSheet = null;
     },

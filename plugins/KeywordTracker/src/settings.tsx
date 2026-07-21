@@ -296,13 +296,13 @@ export default function Settings() {
         <TableRowGroup title="Advanced Notifications">
           <TableSwitchRow
             label="Send Notifications to Channel"
-            subLabel="Forward detected messages silently to a specific channel you own"
+            subLabel="Forward detected messages to a specific channel (you own)"
             value={storage.sendNotificationToChannel}
             onValueChange={(v: boolean) => { storage.sendNotificationToChannel = v; forceUpdate(); }}
           />
           <TableSwitchRow
-            label="Make Notifications to Webhook"
-            subLabel="Send detected messages to a Discord webhook"
+            label="Send Notifications to Webhook"
+            subLabel="Send detected messages to a webhook"
             value={storage.sendNotificationToWebhook}
             onValueChange={(v: boolean) => { storage.sendNotificationToWebhook = v; forceUpdate(); }}
           />

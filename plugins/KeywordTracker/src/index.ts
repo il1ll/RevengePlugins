@@ -18,8 +18,10 @@ const defaults = {
   caseSensitive: false,
   inSentence: true,
   sendNotificationToChannel: false,
+  sendNotificationToWebhook: false,
   keywords: [],
   targetChannelId: "",
+  webhookUrl: "",
   trackMode: "everyone",
   customIds: "",
   ignoreBots: true,
@@ -133,7 +135,10 @@ export default {
       const author = m.author;
       const authorName = author.username;
       
-      if (storage.sendNotificationToChannel && storage.targetChannelId) {
+      const sendToChannel = storage.sendNotificationToChannel && storage.targetChannelId;
+      const sendToWebhook = storage.sendNotificationToWebhook && storage.webhookUrl;
+
+      if (sendToChannel || sendToWebhook) {
         let messageContent = `# **Keyword Detected!**\n\n`;
         messageContent += `**User:** <@${author.id}>\n`;
         messageContent += `    Username: \`@${authorName}\`\n`;
@@ -162,10 +167,22 @@ export default {
           messageContent += `**Message Link:** https://discord.com/channels/@me/${c.id}/${m.id}`;
         }
 
-        RestAPI.post({
-          url: `/channels/${storage.targetChannelId.trim()}/messages`,
-          body: { content: messageContent }
-        }).catch(() => {});
+        if (sendToChannel) {
+          RestAPI.post({
+            url: `/channels/${storage.targetChannelId.trim()}/messages`,
+            body: { content: messageContent }
+          }).catch(() => {});
+        }
+
+        if (sendToWebhook) {
+          fetch(storage.webhookUrl.trim(), {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ content: messageContent })
+          }).catch(() => {});
+        }
         
         showToast(`${authorName} sent a tracked message`);
       } else {

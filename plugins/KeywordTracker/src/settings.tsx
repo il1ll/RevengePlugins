@@ -296,7 +296,7 @@ export default function Settings() {
         <TableRowGroup title="Advanced Notifications">
           <TableSwitchRow
             label="Send Notifications to Channel"
-            subLabel="Forward detected messages to a specific channel"
+            subLabel="Send detected messages to a specific channel"
             value={storage.sendNotificationToChannel}
             onValueChange={(v: boolean) => { storage.sendNotificationToChannel = v; forceUpdate(); }}
           />

@@ -136,6 +136,15 @@ export default function Settings() {
           />
         </TableRowGroup>
 
+        <TableRowGroup title="Plugin Settings">
+          <TableSwitchRow
+            label="Show in Settings"
+            subLabel="Add a shortcut to this plugin in settings page"
+            value={storage.showInSettings}
+            onValueChange={(v: boolean) => { storage.showInSettings = v; forceUpdate(); }}
+          />
+        </TableRowGroup>
+
         <TableRowGroup title="Tracking Target">
           <TableSwitchRow
             label="Track Everyone"
@@ -218,6 +227,21 @@ export default function Settings() {
             value={storage.trackChannelsEnabled}
             onValueChange={(v: boolean) => { storage.trackChannelsEnabled = v; forceUpdate(); }}
           />
+        </TableRowGroup>
+
+        {storage.trackChannelsEnabled && (
+          <TableRowGroup title="Tracked Channel IDs">
+            <Stack spacing={4} style={{ padding: 10 }}>
+              <TextInput
+                placeholder="1205207690352005243, 1296197038006075543"
+                value={storage.trackedChannelIds}
+                onChange={(v: string) => { storage.trackedChannelIds = v; forceUpdate(); }}
+              />
+            </Stack>
+          </TableRowGroup>
+        )}
+
+        <TableRowGroup title="Ignoring">
           <TableSwitchRow
             label="Ignore Servers"
             subLabel="Do not track messages from specific servers"
@@ -234,19 +258,13 @@ export default function Settings() {
             value={storage.ignoreChannelsEnabled}
             onValueChange={(v: boolean) => { storage.ignoreChannelsEnabled = v; forceUpdate(); }}
           />
+          <TableSwitchRow
+            label="Ignore Users"
+            subLabel="Do not track messages from specific users"
+            value={storage.ignoreUsersEnabled}
+            onValueChange={(v: boolean) => { storage.ignoreUsersEnabled = v; forceUpdate(); }}
+          />
         </TableRowGroup>
-
-        {storage.trackChannelsEnabled && (
-          <TableRowGroup title="Tracked Channel IDs">
-            <Stack spacing={4} style={{ padding: 10 }}>
-              <TextInput
-                placeholder="1205207690352005243, 1296197038006075543"
-                value={storage.trackedChannelIds}
-                onChange={(v: string) => { storage.trackedChannelIds = v; forceUpdate(); }}
-              />
-            </Stack>
-          </TableRowGroup>
-        )}
 
         {storage.ignoreServersEnabled && (
           <TableRowGroup title="Ignored Server IDs">
@@ -272,7 +290,25 @@ export default function Settings() {
           </TableRowGroup>
         )}
 
+        {storage.ignoreUsersEnabled && (
+          <TableRowGroup title="Ignored User IDs">
+            <Stack spacing={4} style={{ padding: 10 }}>
+              <TextInput
+                placeholder="1099039269391171765, 845374453939568720"
+                value={storage.ignoredUserIds}
+                onChange={(v: string) => { storage.ignoredUserIds = v; forceUpdate(); }}
+              />
+            </Stack>
+          </TableRowGroup>
+        )}
+
         <TableRowGroup title="Matching Rules">
+          <TableSwitchRow
+            label="Match Whole Words"
+            subLabel="Match keyword as a standalone word only, not inside another word"
+            value={storage.wholeWords}
+            onValueChange={(v: boolean) => { storage.wholeWords = v; forceUpdate(); }}
+          />
           <TableSwitchRow
             label="Exact Match"
             subLabel="The message content must be exactly the keyword with no other words"
@@ -287,7 +323,7 @@ export default function Settings() {
           />
           <TableSwitchRow
             label="Match in a Sentence"
-            subLabel="The keyword can be detected even if it is part of a longer sentence"
+            subLabel="The keyword can be detected even if it is part of a longer word"
             value={storage.inSentence}
             onValueChange={(v: boolean) => { storage.inSentence = v; forceUpdate(); }}
           />
